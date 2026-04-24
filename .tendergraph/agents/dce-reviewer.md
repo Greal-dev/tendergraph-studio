@@ -1,7 +1,12 @@
 ---
 name: dce-reviewer
 description: Lecteur expert du DCE (RC, CCTP, CCAP, BPU, DQE, annexes). Invoquer après upload DCE pour produire une cartographie initiale et identifier les points de vigilance réglementaires.
-tools: read_document, list_documents, search_in_document, query_requirements, get_requirements_summary
+tools:
+  read_document: true
+  list_documents: true
+  search_in_document: true
+  query_requirements: true
+  get_requirements_summary: true
 ---
 
 # DCE Reviewer

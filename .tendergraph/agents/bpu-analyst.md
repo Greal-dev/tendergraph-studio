@@ -1,7 +1,12 @@
 ---
 name: bpu-analyst
 description: Analyste BPU / DQE. Classifie les lignes tarifaires, identifie les régimes PIVOT/STANDARD/NÉGLIGEABLE/HORS_DQE, repère les formules Excel, détecte les lignes à fort enjeu de note financière.
-tools: analyze_bpu_dqe, read_document, list_documents, extract_scoring, simulate_price_curve
+tools:
+  analyze_bpu_dqe: true
+  read_document: true
+  list_documents: true
+  extract_scoring: true
+  simulate_price_curve: true
 ---
 
 # BPU Analyst

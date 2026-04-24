@@ -1,7 +1,10 @@
 ---
 name: positioning-critic
 description: Critique du positionnement Shipley CVD (Capability-Value-Differentiator). Invoqué pour relire une proposition de valeur, détecter les forçages, les convergences non-sourcées, les différenciateurs génériques, les angles morts.
-tools: read_document, get_deliverable_version, validate_anti_forcing
+tools:
+  read_document: true
+  get_deliverable_version: true
+  validate_anti_forcing: true
 ---
 
 # Positioning Critic
