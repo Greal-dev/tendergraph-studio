@@ -1,0 +1,132 @@
+{
+  "$schema": "./tendergraph.config.schema.json",
+  "version": "0.1.0",
+
+  "mcp": {
+    "servers": {
+      "tendergraph": {
+        "transport": "http",
+        "url": "https://tendergraph-v3.fly.dev/mcp/",
+        "authHeaderFromKeychain": "tendergraph.mcp.access_token",
+        "refreshHeaderFromKeychain": "tendergraph.mcp.refresh_token",
+        "refreshEndpoint": "https://tendergraph-v3.fly.dev/api/mcp/token/refresh",
+        "tokenTTLHours": 1,
+        "description": "Serveur MCP TenderGraph — pipeline 11 phases, workspace, validators, versioning."
+      }
+    }
+  },
+
+  "providers": {
+    "default": "anthropic",
+    "available": [
+      {
+        "id": "anthropic",
+        "label": "Anthropic — Claude",
+        "models": ["claude-opus-4-7", "claude-sonnet-4-6", "claude-haiku-4-5"],
+        "defaultModel": "claude-sonnet-4-6",
+        "envVar": "ANTHROPIC_API_KEY",
+        "keychainKey": "tendergraph.provider.anthropic.key",
+        "qualityBadge": "green"
+      },
+      {
+        "id": "openai",
+        "label": "OpenAI — GPT-5",
+        "models": ["gpt-5.4", "gpt-5", "gpt-5-mini"],
+        "defaultModel": "gpt-5.4",
+        "envVar": "OPENAI_API_KEY",
+        "keychainKey": "tendergraph.provider.openai.key",
+        "qualityBadge": "green"
+      },
+      {
+        "id": "google",
+        "label": "Google — Gemini",
+        "models": ["gemini-3-pro", "gemini-3-flash"],
+        "defaultModel": "gemini-3-pro",
+        "envVar": "GOOGLE_GENAI_API_KEY",
+        "keychainKey": "tendergraph.provider.google.key",
+        "qualityBadge": "yellow"
+      },
+      {
+        "id": "xai",
+        "label": "xAI — Grok",
+        "models": ["grok-4.20", "grok-4"],
+        "defaultModel": "grok-4.20",
+        "envVar": "XAI_API_KEY",
+        "keychainKey": "tendergraph.provider.xai.key",
+        "qualityBadge": "yellow"
+      },
+      {
+        "id": "moonshot",
+        "label": "Moonshot — Kimi",
+        "baseURL": "https://api.moonshot.ai/v1",
+        "models": ["kimi-k2", "kimi-k3"],
+        "defaultModel": "kimi-k2",
+        "envVar": "MOONSHOT_API_KEY",
+        "keychainKey": "tendergraph.provider.moonshot.key",
+        "qualityBadge": "yellow",
+        "compatibility": "openai"
+      },
+      {
+        "id": "zhipu",
+        "label": "Zhipu — GLM",
+        "baseURL": "https://open.bigmodel.cn/api/paas/v4",
+        "models": ["glm-4.6", "glm-4.5"],
+        "defaultModel": "glm-4.6",
+        "envVar": "ZHIPU_API_KEY",
+        "keychainKey": "tendergraph.provider.zhipu.key",
+        "qualityBadge": "yellow",
+        "compatibility": "openai"
+      },
+      {
+        "id": "custom",
+        "label": "Custom OpenAI-compatible",
+        "baseURL": null,
+        "description": "Pour OpenRouter, Together, vLLM local, Ollama, etc.",
+        "compatibility": "openai",
+        "qualityBadge": "red"
+      }
+    ],
+    "qualityBadgeLegend": {
+      "green": "Recommandé — validators TG passent de manière fiable, <3 retries par livrable",
+      "yellow": "Fonctionnel — validators passent avec retries fréquents, à surveiller",
+      "red": "Expérimental — qualité non vérifiée, à vos risques"
+    }
+  },
+
+  "tendergraph": {
+    "brand": "TenderGraph Studio",
+    "version": "0.1.0-alpha",
+    "authBaseURL": "https://tendergraph.app",
+    "docsBaseURL": "https://tendergraph-v3.fly.dev/api/mcp/docs",
+    "supportEmail": "support@tendergraph.app",
+    "telemetry": {
+      "enabled": true,
+      "endpoint": "https://tendergraph-v3.fly.dev/api/mcp/telemetry/studio",
+      "optOutEnv": "TG_STUDIO_NO_TELEMETRY"
+    }
+  },
+
+  "agents": {
+    "enabled": ["dce-reviewer", "bpu-analyst", "mt-writer",
+                "risk-challenger", "positioning-critic"],
+    "default": null
+  },
+
+  "commands": {
+    "enabled": ["explore", "cartographie", "strategie", "solutionning",
+                "solution", "briefs", "production", "book-cv",
+                "revue", "diagnostic", "maturation",
+                "compare", "status", "resume"],
+    "aliases": {
+      "solutionning-strategy": "solutionning",
+      "material": "maturation"
+    }
+  },
+
+  "hooks": {
+    "pre-tool-use": ["check-traceability"],
+    "post-tool-use": ["lint-markers"],
+    "pre-write": ["pre-tool-write"],
+    "post-write": ["post-tool-write"]
+  }
+}

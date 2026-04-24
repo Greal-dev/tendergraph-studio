@@ -1,0 +1,59 @@
+name: TenderGraph Alignment
+
+on:
+  pull_request:
+    paths:
+      - '.tendergraph/**'
+      - 'tools/**'
+      - '.github/workflows/tendergraph-align.yml'
+  push:
+    branches: [dev, main]
+    paths:
+      - '.tendergraph/**'
+      - 'tools/**'
+  workflow_dispatch:
+  schedule:
+    # Quotidien 06:00 UTC pour detecter les drifts backend non-synchronises
+    - cron: '0 6 * * *'
+
+concurrency:
+  group: tg-align-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  alignment:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.13
+      - name: Check Studio ↔ Backend alignment
+        env:
+          TG_CATALOG_URL: https://tendergraph-v3.fly.dev/api/mcp/catalog
+        run: bun run tools/check-tg-alignment.ts
+
+  overlay-sanity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Valider structure overlay
+        run: |
+          set -e
+          test -f TENDERGRAPH.md
+          test -f .tendergraph/config/tendergraph.config.json
+          test -d .tendergraph/agents && [ "$(ls .tendergraph/agents/*.md | wc -l)" -ge 3 ]
+          test -d .tendergraph/commands && [ "$(ls .tendergraph/commands/*.md | wc -l)" -ge 11 ]
+          test -d .tendergraph/hooks && [ "$(ls .tendergraph/hooks/*.sh | wc -l)" -ge 2 ]
+          test -f tools/check-tg-alignment.ts
+          echo "✓ Overlay structure OK"
+      - name: Valider config JSON
+        run: |
+          python3 -c "import json; json.load(open('.tendergraph/config/tendergraph.config.json'))"
+          echo "✓ config JSON valide"
+      - name: Valider shebangs hooks
+        run: |
+          for h in .tendergraph/hooks/*.sh; do
+            head -1 "$h" | grep -q '^#!/usr/bin/env bash' || { echo "BAD shebang in $h"; exit 1; }
+          done
+          echo "✓ hooks shebangs OK"
