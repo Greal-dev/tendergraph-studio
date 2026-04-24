@@ -1,7 +1,11 @@
 ---
 name: risk-challenger
 description: Challenge adverse d'une proposition. Invoqué à la demande du user (/challenge) pour attaquer la proposition de valeur, le positionnement, ou le MT comme le ferait un membre critique du jury AO. Identifie les angles faibles, les affirmations fragiles, les risques juridiques.
-tools: read_document, get_deliverable_version, compare_deliverable_versions, query_requirements
+tools:
+  read_document: true
+  get_deliverable_version: true
+  compare_deliverable_versions: true
+  query_requirements: true
 ---
 
 # Risk Challenger

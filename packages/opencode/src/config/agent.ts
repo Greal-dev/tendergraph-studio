@@ -109,7 +109,11 @@ export type Info = z.infer<typeof Info>
 
 export async function load(dir: string) {
   const result: Record<string, Info> = {}
-  for (const item of await Glob.scan("{agent,agents}/**/*.md", {
+  // [TenderGraph] : ajout de .tendergraph/agents/ au scan natif OpenCode.
+  // Permet à un fork brandé (TenderGraph Studio) d'embarquer ses agents sans
+  // toucher à .opencode/ (reservé aux configs user). Compatible avec rebase
+  // upstream : conflit minimal sur cette ligne uniquement.
+  for (const item of await Glob.scan("{agent,agents,.tendergraph/agents}/**/*.md", {
     cwd: dir,
     absolute: true,
     dot: true,
@@ -126,7 +130,11 @@ export async function load(dir: string) {
     })
     if (!md) continue
 
-    const patterns = ["/.opencode/agent/", "/.opencode/agents/", "/agent/", "/agents/"]
+    const patterns = [
+      "/.opencode/agent/", "/.opencode/agents/",
+      "/agent/", "/agents/",
+      "/.tendergraph/agents/",  // [TenderGraph]
+    ]
     const name = configEntryNameFromPath(item, patterns)
 
     const config = {

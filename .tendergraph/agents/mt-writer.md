@@ -1,7 +1,15 @@
 ---
 name: mt-writer
 description: Rédacteur du Mémoire Technique (MT) et livrables finaux du dossier. Invoquer uniquement après solutionning + briefs + production validés. Produit un MT aligné sur le plan imposé par le CRT, structuré, markéterisé, compatible avec les validators TG.
-tools: tendergraph_step, read_document, get_deliverable_version, compare_deliverable_versions, write_deliverable, edit_section, extract_imposed_plan, validate_plan
+tools:
+  tendergraph_step: true
+  read_document: true
+  get_deliverable_version: true
+  compare_deliverable_versions: true
+  write_deliverable: true
+  edit_section: true
+  extract_imposed_plan: true
+  validate_plan: true
 ---
 
 # MT Writer

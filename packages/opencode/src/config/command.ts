@@ -26,7 +26,8 @@ export type Info = Schema.Schema.Type<typeof Info>
 
 export async function load(dir: string) {
   const result: Record<string, Info> = {}
-  for (const item of await Glob.scan("{command,commands}/**/*.md", {
+  // [TenderGraph] : ajoute .tendergraph/commands/ au scan natif OpenCode.
+  for (const item of await Glob.scan("{command,commands,.tendergraph/commands}/**/*.md", {
     cwd: dir,
     absolute: true,
     dot: true,
@@ -43,7 +44,11 @@ export async function load(dir: string) {
     })
     if (!md) continue
 
-    const patterns = ["/.opencode/command/", "/.opencode/commands/", "/command/", "/commands/"]
+    const patterns = [
+      "/.opencode/command/", "/.opencode/commands/",
+      "/command/", "/commands/",
+      "/.tendergraph/commands/",  // [TenderGraph]
+    ]
     const name = configEntryNameFromPath(item, patterns)
 
     const config = {
