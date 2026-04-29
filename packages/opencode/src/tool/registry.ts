@@ -276,8 +276,51 @@ export const layer: Layer.Layer<
       return ["Available agent types and the tools they have access to:", description].join("\n")
     })
 
+    // TITAN guardrail (L4) : en mode TenderGraph Desktop, on restreint
+    // drastiquement le toolset pour empecher l'exfiltration via shell ou
+    // recherche de code. Detection :
+    //   - TG_TITAN_MODE=1/true => active
+    //   - TG_TITAN_MODE=0/false/off => desactive (opt-out explicite)
+    //   - Sinon : detection auto sur le nom de l'executable. Si le binaire
+    //     a ete distribue sous "tendergraph-agent-*" (build TenderGraph),
+    //     on active par defaut. Pour un build OpenCode upstream, off.
+    const envFlag = (process.env.TG_TITAN_MODE || "").toLowerCase()
+    const execName = (process.argv0 || process.execPath || "").toLowerCase()
+    const titanMode =
+      envFlag === "1" || envFlag === "true"
+        ? true
+        : envFlag === "0" || envFlag === "false" || envFlag === "off"
+          ? false
+          : execName.includes("tendergraph-agent")
+    const TITAN_ALLOWED_TOOLS = new Set<string>([
+      "read",       // lire les docs AO du dossier projet
+      "glob",       // lister les fichiers AO
+      "grep",       // chercher dans les docs AO
+      "edit",       // editer les livrables existants
+      "write",      // ecrire les livrables (chemins controles)
+      "todo",       // suivi de progression
+      "question",   // poser une question au bid manager
+      "skill",      // charger les skills metier (Shipley, etc.)
+      "task",       // dispatcher des subagents si necessaire
+      "invalid",    // gestionnaire d'erreur tool
+      "plan",       // mode plan
+      "fetch",      // appeler le backend TG (whitelist enforce backend-side)
+    ])
+
     const tools: Interface["tools"] = Effect.fn("ToolRegistry.tools")(function* (input) {
       const filtered = (yield* all()).filter((tool) => {
+        // En mode TITAN : whitelist stricte. Les tools comme bash, codesearch,
+        // websearch, patch sont exclus (vecteurs d'exfiltration ou de
+        // contournement). Les MCP tools backend gardent leur prefixe et
+        // sont autorises.
+        if (titanMode) {
+          const isMcp = tool.id.includes("_") && tool.id.split("_")[0].length > 0 && !TITAN_ALLOWED_TOOLS.has(tool.id.split("_")[0])
+          if (!TITAN_ALLOWED_TOOLS.has(tool.id) && !isMcp) {
+            log.info("titan_mode: blocked tool=%s", { tool: tool.id })
+            return false
+          }
+        }
+
         if (tool.id === CodeSearchTool.id || tool.id === WebSearchTool.id) {
           return input.providerID === ProviderID.opencode || Flag.OPENCODE_ENABLE_EXA
         }
