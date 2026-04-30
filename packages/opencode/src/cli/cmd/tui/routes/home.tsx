@@ -196,7 +196,7 @@ export function Home() {
         <box
           flexShrink={0}
           alignItems="center"
-          bg={TITAN_NAVY}
+          backgroundColor={TITAN_NAVY}
           paddingTop={6}
           paddingBottom={6}
           paddingLeft={12}
