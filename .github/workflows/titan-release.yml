@@ -21,7 +21,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [x64, arm64]
+        # arm64 desactive : windows-latest est x64 et le build.ts complet
+        # essaie de cross-compiler vers linux-aarch64 (echec extract bun runtime).
+        # A reactiver via runner windows-11-arm + script de build target-aware.
+        arch: [x64]
     steps:
       - uses: actions/checkout@v4
 
