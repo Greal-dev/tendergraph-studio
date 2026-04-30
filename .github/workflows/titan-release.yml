@@ -1,0 +1,138 @@
+name: Titan Release (Windows)
+
+on:
+  push:
+    tags:
+      - "titan-v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version (sans le prefixe v, ex: 1.14.22)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Build Windows (${{ matrix.arch }})
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+        shell: bash
+
+      - name: Build Titan binary (${{ matrix.arch }})
+        working-directory: packages/opencode
+        env:
+          TARGET_ARCH: ${{ matrix.arch }}
+        shell: bash
+        run: |
+          # Build single-target Windows binary via le script existant
+          if [ "$TARGET_ARCH" = "x64" ]; then
+            bun run script/build.ts --single
+          else
+            # Pour arm64, on lance le build complet et on extrait l'asset
+            bun run script/build.ts
+          fi
+
+      - name: Locate binary and rename to titan.exe
+        shell: pwsh
+        working-directory: packages/opencode
+        run: |
+          $distDir = "dist/opencode-windows-${{ matrix.arch }}"
+          if (-not (Test-Path $distDir)) {
+            $distDir = (Get-ChildItem dist -Directory | Where-Object { $_.Name -like "*windows-${{ matrix.arch }}*" } | Select-Object -First 1).FullName
+          }
+          if (-not (Test-Path $distDir)) {
+            throw "Aucun build Windows-${{ matrix.arch }} trouve dans dist/"
+          }
+          Write-Host "Build directory: $distDir"
+          $binDir = Join-Path $distDir "bin"
+          $exe = Get-ChildItem $binDir -Filter "opencode*.exe" | Select-Object -First 1
+          if (-not $exe) { throw "Aucun opencode.exe dans $binDir" }
+          Copy-Item $exe.FullName (Join-Path $binDir "titan.exe")
+
+      - name: Package zip
+        shell: pwsh
+        working-directory: packages/opencode
+        run: |
+          $distDir = (Get-ChildItem dist -Directory | Where-Object { $_.Name -like "*windows-${{ matrix.arch }}*" -and $_.Name -notlike "*baseline*" } | Select-Object -First 1).FullName
+          $zipName = "opencode-windows-${{ matrix.arch }}.zip"
+          $zipPath = Join-Path $env:GITHUB_WORKSPACE $zipName
+          Compress-Archive -Path (Join-Path $distDir "*") -DestinationPath $zipPath -Force
+          Write-Host "Created: $zipPath"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: titan-windows-${{ matrix.arch }}
+          path: opencode-windows-${{ matrix.arch }}.zip
+
+  release:
+    name: Create Release
+    needs: build-windows
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: ver
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+            echo "tag=titan-v${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            tag="${GITHUB_REF##*/}"
+            echo "tag=$tag" >> "$GITHUB_OUTPUT"
+            echo "version=${tag#titan-v}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Stage release files
+        shell: bash
+        run: |
+          mkdir -p release
+          find artifacts -type f -name "*.zip" -exec cp {} release/ \;
+          ls -la release/
+
+      - name: Create or update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.ver.outputs.tag }}
+          name: Titan ${{ steps.ver.outputs.version }}
+          body: |
+            ## Installation
+
+            ```powershell
+            iwr -useb https://titan.tendergraph.app/install.ps1 | iex
+            ```
+
+            Ou avec une version specifique :
+
+            ```powershell
+            iwr -useb https://titan.tendergraph.app/install.ps1 | iex -ArgumentList "-Version","${{ steps.ver.outputs.version }}"
+            ```
+
+            ## Mise a jour
+
+            Re-execute la commande d'installation ci-dessus.
+          files: release/*.zip
+          fail_on_unmatched_files: true
