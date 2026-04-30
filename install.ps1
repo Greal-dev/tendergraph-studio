@@ -30,23 +30,31 @@ $Arch = if ([Environment]::Is64BitOperatingSystem) {
 }
 Write-Step "Architecture detectee : windows-$Arch"
 
-# 2. Resolution version (latest si non fournie)
+# 2. Resolution version + tag (latest si non fournie)
+# Les releases Titan sont taguees 'titan-vX.Y.Z'. Le tag upstream OpenCode 'vX.Y.Z' reste supporte.
 if ([string]::IsNullOrEmpty($Version)) {
-  Write-Step "Recherche de la derniere release..."
+  Write-Step "Recherche de la derniere release Titan..."
   try {
-    $release = Invoke-RestMethod "https://api.github.com/repos/$Repo/releases/latest" -UseBasicParsing
-    $Version = $release.tag_name -replace "^v", ""
+    $releases = Invoke-RestMethod "https://api.github.com/repos/$Repo/releases?per_page=20" -UseBasicParsing
+    $latest = $releases | Where-Object { $_.tag_name -like "titan-v*" } | Select-Object -First 1
+    if (-not $latest) {
+      $latest = Invoke-RestMethod "https://api.github.com/repos/$Repo/releases/latest" -UseBasicParsing
+    }
+    $Tag = $latest.tag_name
+    $Version = $Tag -replace "^titan-v", "" -replace "^v", ""
   } catch {
     throw "Impossible de joindre GitHub Releases pour $Repo : $_"
   }
 } else {
   Write-Step "Version demandee : $Version"
+  $Version = $Version -replace "^titan-v", "" -replace "^v", ""
+  $Tag = "titan-v$Version"
 }
-Write-Info "Version cible : v$Version"
+Write-Info "Tag cible : $Tag (version $Version)"
 
 # 3. Telechargement de l'asset
 $AssetName = "opencode-windows-$Arch.zip"
-$DownloadUrl = "https://github.com/$Repo/releases/download/v$Version/$AssetName"
+$DownloadUrl = "https://github.com/$Repo/releases/download/$Tag/$AssetName"
 $TempZip = Join-Path $env:TEMP "titan-$Version-$Arch.zip"
 
 Write-Step "Telechargement depuis $DownloadUrl"
@@ -88,7 +96,8 @@ Remove-Item -Recurse -Force $ExtractDir, $TempZip -ErrorAction SilentlyContinue
 # 6. Ajout au PATH utilisateur
 if (-not $NoModifyPath) {
   $UserPath = [Environment]::GetEnvironmentVariable("Path", "User")
-  $entries = ($UserPath ?? "") -split ";" | Where-Object { $_ -ne "" }
+  if ($null -eq $UserPath) { $UserPath = "" }
+  $entries = $UserPath -split ";" | Where-Object { $_ -ne "" }
   if ($entries -notcontains $BinDir) {
     Write-Step "Ajout de $BinDir au PATH utilisateur"
     $newPath = ((@($entries) + @($BinDir)) -join ";")
