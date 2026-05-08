@@ -1,0 +1,37 @@
+name: Sync install.ps1 to gh-pages
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - "install.ps1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout dev
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+
+      - name: Copy install.ps1 to gh-pages
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cp install.ps1 /tmp/install.ps1
+          git fetch origin gh-pages
+          git checkout gh-pages
+          cp /tmp/install.ps1 install.ps1
+          if git diff --quiet install.ps1; then
+            echo "install.ps1 unchanged on gh-pages, skipping commit"
+            exit 0
+          fi
+          git add install.ps1
+          git commit -m "sync(install.ps1): mirror from dev@${GITHUB_SHA::7}"
+          git push origin gh-pages
