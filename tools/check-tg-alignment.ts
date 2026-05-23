@@ -55,7 +55,7 @@ function readOverlay() {
       const content = readFileSync(join(commandsDir, f), "utf8");
       const name = basename(f, ".md");
       const phaseMatch = content.match(/^phase_backend:\s*(\S+)/m);
-      const toolRegex = /tendergraph_step|get_workspace_tree|read_document|write_deliverable|edit_section|list_documents|search_in_document|query_requirements|get_requirements_summary|extract_imposed_plan|validate_plan|extract_scoring|simulate_price_curve|analyze_bpu_dqe|analyze_form|advance_phase|validate_anti_forcing|validate_solutionning|list_my_projects|accept_project_invitation|acquire_lock|release_lock|wait_for_lock|list_active_locks|list_deliverable_versions|get_deliverable_version|compare_deliverable_versions|imitation_gap_report|get_user_guide/g;
+      const toolRegex = /tendergraph_step|tendergraph_kickoff|tendergraph_map_existing|tendergraph_submit_rex|tendergraph_cross_plan_scoring|get_workspace_tree|read_document|write_deliverable|edit_section|list_documents|search_in_document|query_requirements|get_requirements_summary|extract_imposed_plan|validate_plan|extract_scoring|simulate_price_curve|simulate_composite_weighting|analyze_bpu_dqe|analyze_form|advance_phase|validate_anti_forcing|validate_scoring_strategy|validate_briefs_coverage|validate_transition_artefact|list_my_projects|accept_project_invitation|create_project|find_project_by_query|acquire_lock|release_lock|wait_for_lock|list_active_locks|list_deliverable_versions|get_deliverable_version|compare_deliverable_versions|imitation_gap_report|get_user_guide|produce_phase_book_cv|produce_phase_production_mt|produce_phase_production_other|produce_phase_revue_coherence|produce_phase_revue_evaluateur|produce_phase_solution_design|propose_edit|propose_supports|resolve_pending_edit|list_pending_edits|start_requirement_mining|enter_copilot_mode|final_review_aggregate|final_review_corpus|final_review_p1|final_review_p2|final_review_prompt|recommend_models|upload_dce_file|download_file|generate_excel_capacity_plan|generate_excel_financial_model|generate_html_archmap|generate_html_dashboard|generate_html_deck|generate_pptx_from_brief|list_workspace_contents|list_sampling_phases_available|export_support_to_pdf|tendergraph_docx_add_comment|tendergraph_docx_list_comments|tendergraph_docx_resolve_comment|tendergraph_docx_delete_comment/g;
       const tools_used = Array.from(new Set(content.match(toolRegex) ?? []));
       commands.push({
         file: f, name,
@@ -70,10 +70,28 @@ function readOverlay() {
     for (const f of readdirSync(agentsDir).filter(f => f.endsWith(".md"))) {
       const content = readFileSync(join(agentsDir, f), "utf8");
       const name = basename(f, ".md");
-      const toolsMatch = content.match(/^tools:\s*(.+)$/m);
-      const tools_declared = toolsMatch
-        ? toolsMatch[1].split(",").map(s => s.trim())
-        : [];
+      // Supporte deux formats de frontmatter :
+      //   (a) inline CSV  : `tools: foo, bar, baz`
+      //   (b) YAML mapping : `tools:\n  foo: true\n  bar: true`
+      const tools_declared: string[] = [];
+      const inlineMatch = content.match(/^tools:[ \t]*([^\n]+)$/m);
+      if (inlineMatch && inlineMatch[1].trim() !== "") {
+        for (const tok of inlineMatch[1].split(",")) {
+          const t = tok.trim();
+          if (t) tools_declared.push(t);
+        }
+      } else if (/^tools:\s*$/m.test(content)) {
+        // Format YAML mapping : lit les lignes indentees jusqu'au prochain top-level key ou ---
+        const lines = content.split(/\r?\n/);
+        let inTools = false;
+        for (const line of lines) {
+          if (/^tools:\s*$/.test(line)) { inTools = true; continue; }
+          if (!inTools) continue;
+          if (/^[A-Za-z_][A-Za-z0-9_]*:/.test(line) || /^---\s*$/.test(line)) break;
+          const m = line.match(/^\s+([A-Za-z_][A-Za-z0-9_]*)\s*:\s*(true|false)?/);
+          if (m && (m[2] === undefined || m[2] === "true")) tools_declared.push(m[1]);
+        }
+      }
       agents.push({ file: f, name, tools_declared });
     }
   }

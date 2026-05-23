@@ -1,6 +1,6 @@
 {
   "$schema": "./tendergraph.config.schema.json",
-  "version": "0.1.0",
+  "version": "0.2.0",
 
   "mcp": {
     "servers": {
@@ -11,7 +11,7 @@
         "refreshHeaderFromKeychain": "tendergraph.mcp.refresh_token",
         "refreshEndpoint": "https://tendergraph-v3.fly.dev/api/mcp/token/refresh",
         "tokenTTLHours": 1,
-        "description": "Serveur MCP TenderGraph — pipeline 11 phases, workspace, validators, versioning."
+        "description": "Serveur MCP TenderGraph — pipeline 13 phases, workspace, validators, versioning."
       }
     }
   },
@@ -95,7 +95,7 @@
 
   "tendergraph": {
     "brand": "TenderGraph Studio",
-    "version": "0.1.0-alpha",
+    "version": "0.2.0",
     "authBaseURL": "https://tendergraph.app",
     "docsBaseURL": "https://tendergraph-v3.fly.dev/api/mcp/docs",
     "supportEmail": "support@tendergraph.app",
