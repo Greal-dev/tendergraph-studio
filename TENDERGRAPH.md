@@ -60,6 +60,31 @@ tools/
   des rôles courts d'agents, des hooks déterministes, et des slash
   commands minces qui délèguent au serveur via `tendergraph_step`.
 
+## Souveraineté et LLM propriétaire
+
+Desktop se connecte au LLM de votre choix via BYOK (Bring Your Own Key).
+Sept providers sont déclarés nativement : Anthropic, OpenAI, Google,
+xAI, Moonshot, Zhipu, ainsi qu'un connecteur générique compatible
+OpenAI pour tout LLM auto-hébergé (Mistral sur OVH, Llama on-prem,
+infrastructure GPU interne).
+
+Conséquences pratiques :
+
+- Les données du dossier restent sur le poste utilisateur dans un
+  workspace local sandboxé. Elles ne transitent que vers le LLM que
+  vous avez désigné dans la config.
+- Aucune obligation d'utiliser un LLM hébergé hors UE.
+- La configuration provider vit dans `.tendergraph/config/tendergraph.config.json`
+  (cf. champ `providers.available`) avec un badge qualité (green / yellow / red)
+  indiquant le niveau de couverture testé sur dossier AO.
+- Voie privilégiée par les clients du secteur public, défense et santé
+  qui doivent contraindre l'inférence LLM à une infrastructure souveraine.
+
+Le serveur TenderGraph MCP, lui, n'effectue jamais d'inférence LLM :
+il sert la doctrine, les helpers et les validators déterministes, mais
+les générations de texte se font côté Desktop avec le LLM que vous avez
+désigné. La séparation est nette.
+
 ## Développement
 
 Voir `.tendergraph/docs/ARCHITECTURE.md` pour l'architecture détaillée et
