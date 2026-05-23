@@ -113,13 +113,20 @@
   },
 
   "commands": {
-    "enabled": ["explore", "cartographie", "strategie", "solutionning",
-                "solution", "briefs", "production", "book-cv",
-                "revue", "diagnostic", "maturation",
+    "enabled": ["explore", "cartographie", "strategie",
+                "scoring-strategy", "financial-analysis", "solution-design",
+                "briefs", "production", "book-cv",
+                "diagnostic-collecte", "revue-coherence", "revue-evaluateur",
+                "materialisation-revision",
                 "compare", "status", "resume"],
     "aliases": {
-      "solutionning-strategy": "solutionning",
-      "material": "maturation"
+      "solutionning": "solution-design",
+      "solution": "solution-design",
+      "solutionning-strategy": "scoring-strategy",
+      "diagnostic": "diagnostic-collecte",
+      "revue": "revue-coherence",
+      "maturation": "materialisation-revision",
+      "material": "materialisation-revision"
     }
   },
 

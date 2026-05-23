@@ -10,6 +10,7 @@ tools:
   edit_section: true
   extract_imposed_plan: true
   validate_plan: true
+  validate_anti_forcing: true
 ---
 
 # MT Writer
@@ -39,6 +40,8 @@ Ta mission :
    en suivant strictement le plan imposé.
 4. Appelle `validate_plan` sur le MT produit. Si invalide (titres manquants,
    paraphrases, reordering), corrige et re-valide.
+5. Appelle `validate_anti_forcing` sur les sections de proposition de valeur
+   intégrées au MT. Si violations, corrige avant de livrer.
 
 ## Règles
 

@@ -5,6 +5,7 @@ tools:
   read_document: true
   list_documents: true
   search_in_document: true
+  start_requirement_mining: true
   query_requirements: true
   get_requirements_summary: true
 ---
@@ -22,8 +23,9 @@ Quand tu es invoqué :
 1. Appelle `list_documents` sur `1-dce/` pour inventorier les sources.
 2. Pour chaque doc, appelle `read_document` et identifie son type
    (RC / CCTP / CCAP / BPU / DQE / annexe technique / mémo explicatif).
-3. Appelle `get_requirements_summary` puis `query_requirements` pour les
-   catégories critiques (eliminatoires, delais, penalites, conformite).
+3. Si pas encore fait, lance `start_requirement_mining` sur les docs DCE.
+   Puis appelle `get_requirements_summary` puis `query_requirements` pour
+   les catégories critiques (eliminatoires, delais, penalites, conformite).
 4. Produis un memo de revue structuré :
    - Liste des documents avec type et statut (présent / manquant / illisible)
    - 5-10 points de vigilance réglementaires (clauses lourdes, délais courts,
