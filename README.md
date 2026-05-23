@@ -139,3 +139,27 @@ It's very similar to Claude Code in terms of capability. Here are the key differ
 ---
 
 **Join our community** [Discord](https://discord.gg/opencode) | [X.com](https://x.com/opencode)
+
+---
+
+## TenderGraph Desktop fork
+
+Ce dépôt est un fork pré-configuré d'OpenCode distribué sous le nom
+**TenderGraph Desktop**. Il équipe le poste utilisateur d'un agent IA
+spécialisé dans la réponse aux appels d'offres publics IT français, connecté
+au serveur TenderGraph MCP.
+
+TenderGraph Desktop est l'une des variantes techniques de **TITAN Local**
+(le système cognitif TenderGraph), destinée aux utilisateurs qui ne
+disposent pas d'un IDE IA (Claude Code, Cursor, Codex, Copilot…) sur leur
+poste et préfèrent une application desktop dédiée.
+
+- Présentation technique et architecture : [`TENDERGRAPH.md`](./TENDERGRAPH.md)
+- Architecture overlay détaillée : [`.tendergraph/docs/ARCHITECTURE.md`](./.tendergraph/docs/ARCHITECTURE.md)
+- Contrat d'alignement avec le backend : [`.tendergraph/docs/ALIGNMENT.md`](./.tendergraph/docs/ALIGNMENT.md)
+- Narratif produit et conditions commerciales : [tendergraph.app](https://tendergraph.app)
+
+Toute la documentation propre à TenderGraph vit dans `.tendergraph/` et
+dans les fichiers `TENDERGRAPH.md` / `LICENSE.TG`. Le code OpenCode
+upstream et le présent README en amont restent intacts pour permettre les
+rebases sans conflit.

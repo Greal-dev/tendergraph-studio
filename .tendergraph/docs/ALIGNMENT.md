@@ -1,50 +1,81 @@
-# Alignment contract — Studio ↔ Backend
+# Alignment contract — Desktop ↔ Backend MCP
 
 ## Pourquoi
 
-TenderGraph a trois faces qui partagent le même pipeline métier :
+TenderGraph distribue le système cognitif **TITAN** sous deux fronts
+techniques qui partagent le même pipeline métier et le même backend MCP :
 
-- **SaaS managed** : pipeline piloté par serveur (`backend/src/chat/opus_runner.py`)
-- **MCP server** : mêmes helpers exposés aux clients MCP
-  (`backend/src/mcp/tools_mcp.py`, `backend/src/mcp/orchestrator.py`)
-- **Studio** : client pré-configuré qui parle au MCP (`.tendergraph/` dans ce repo)
+- **TITAN Local dans un IDE IA** : configuration MCP greffée sur Claude
+  Code, Cursor, Codex, Copilot, etc. déjà installé chez l'utilisateur.
+- **TenderGraph Desktop** : client desktop dédié, fork OpenCode, pour
+  les utilisateurs sans IDE IA — c'est ce repo, avec son overlay
+  `.tendergraph/`.
 
-Si une phase est ajoutée cote backend, les trois doivent suivre. Sinon :
+Si une phase est ajoutée côté backend MCP, les deux fronts doivent suivre.
+Sinon :
 
-- SaaS continue de tourner mais produit un livrable invisible dans l'UI Studio
-- MCP expose un tool que Studio ne référence pas
-- User se retrouve avec une commande `/old-phase` obsolète
+- Le backend expose un tool ou une phase que Desktop ne référence pas.
+- L'utilisateur se retrouve avec une commande obsolète qui n'a plus de
+  pendant côté serveur.
+- Les livrables produits côté serveur deviennent invisibles dans le
+  client.
 
 ## Source de vérité
 
-**Backend tendergraph-v3** via l'endpoint public :
+**Backend TenderGraph MCP** via l'endpoint public :
 
 ```
 GET https://tendergraph-v3.fly.dev/api/mcp/catalog
 
 {
-  "phases": ["explore", "cartographie", "strategie", "solutionning",
-             "solution", "briefs", "production", "book_cv",
-             "revue", "diagnostic_collecte", "materialisation_revision"],
+  "phases": [
+    "explore",
+    "cartographie",
+    "diagnostic_collecte",
+    "scoring_strategy",
+    "strategie",
+    "solution_design",
+    "financial_analysis",
+    "briefs",
+    "production",
+    "book_cv",
+    "materialisation_revision",
+    "revue_coherence",
+    "revue_evaluateur"
+  ],
   "tools_public": [
     {"name": "tendergraph_step", "description": "..."},
     {"name": "get_workspace_tree", ...},
     ...
   ],
-  "validators": ["validate_anti_forcing", "validate_solutionning"],
+  "validators": ["validate_anti_forcing", "validate_scoring_strategy"],
   "resources": ["tendergraph://workspace/...", "tendergraph://docs/..."]
 }
 ```
 
-## Ce que Studio doit garantir
+Le pipeline backend compte **13 phases** dont 2 ajoutées récemment
+(`scoring_strategy`, `financial_analysis`) avec leurs agents dédiés
+(`scoring-strategist`, `financial-analyst`).
 
-1. **Chaque phase backend a un fichier `.tendergraph/commands/<phase>.md`** ou
-   un alias documenté.
-2. **Aucun slash command n'existe** sans phase backend correspondante.
-3. **Chaque tool public MCP est référencé** dans au moins un agent ou une
-   command (warning seulement — permet aux tools rarement utilisés d'exister).
+## Ce que Desktop doit garantir
+
+1. **Chaque phase backend a un fichier `.tendergraph/commands/<phase>.md`**
+   (frontmatter `phase_backend: <nom>` pour traçabilité) ou un alias
+   documenté.
+2. **Aucun slash command de phase n'existe** sans phase backend
+   correspondante. Les commandes utilitaires transverses (`compare`,
+   `resume`, `status`, `book-cv`, `briefs`, `cartographie`, `explore`,
+   `production`, `strategie`) sont autorisées sans `phase_backend` quand
+   elles couvrent des helpers cross-cutting.
+3. **Chaque tool public MCP est référencé** dans au moins un agent ou
+   une command (warning seulement — permet aux tools rarement utilisés
+   d'exister).
 4. **Les hooks pre/post-tool** ne référencent que des tools qui existent
    côté MCP.
+5. **Les validators MCP** (`validate_anti_forcing`,
+   `validate_scoring_strategy`, etc.) sont référencés par les agents
+   pertinents (`mt-writer`, `risk-challenger`, `bpu-analyst`,
+   `scoring-strategist`).
 
 ## Vérification automatique
 
@@ -57,17 +88,16 @@ bun run tools/check-tg-alignment.ts
 
 Exécuté :
 
-- En CI sur chaque PR Studio (GitHub Actions)
+- En CI sur chaque PR Desktop (GitHub Actions)
 - En pre-commit local si le hook est activé
   (`git config core.hooksPath .githooks`)
-- Proactivement par l'agent `tg-studio-aligner` côté backend quand une modif
-  touche `backend/src/chat/opus_runner.py::PHASE_NAMES` ou
-  `backend/src/mcp/orchestrator.py::_PHASE_CONFIG`
+- Proactivement par l'agent `tg-studio-aligner` côté backend quand une
+  modif touche la liste des phases ou la config orchestrateur.
 
 Output type :
 
 ```
-[tg-align] OK — 11 phases, 23 tools, 2 validators, alignment green.
+[tg-align] OK — 13 phases, N tools, 2 validators, alignment green.
 ```
 
 ou :
@@ -82,11 +112,10 @@ ou :
 ## Cycle de vie
 
 ```
-┌─ dev backend ──────────┐   ┌─ dev studio ──────────┐
-│ PR #N sur               │   │ PR #M sur              │
-│ tendergraph-v3          │   │ tendergraph-studio     │
+┌─ dev backend MCP ──────┐   ┌─ dev Desktop ──────────┐
+│ PR sur le repo backend  │   │ PR sur ce repo         │
 │   - ajoute phase X      │   │   - ajoute             │
-│   - update _PHASE_CONFIG│   │     commands/X.md      │
+│   - update orchestrator │   │     commands/X.md      │
 │   - update prompts      │──►│   - update agent role  │
 │   - test_mcp_parity ok  │   │   - check-tg-align ok  │
 └─────────────────────────┘   └────────────────────────┘
@@ -96,30 +125,30 @@ ou :
                     Deploy prod
                  (MCP catalog à jour)
                          │
-                    Studio release (brew/scoop/npm)
+                    Desktop release (brew/scoop/npm)
 ```
 
 ## Breaking changes
 
-Si un changement backend casse l'alignement (rename phase, suppression tool
-public), la règle **doit** être :
+Si un changement backend casse l'alignement (rename phase, suppression
+tool public), la règle **doit** être :
 
-1. **Grace period** : le backend continue d'exposer l'ancien nom en alias
-   pendant 2 releases Studio.
-2. **Studio v(n)** : ajoute le nouveau nom, marque l'ancien `@deprecated`
-   dans la doc command.
-3. **Studio v(n+1)** : retire l'ancien nom, aligne sur le nouveau.
+1. **Grace period** : le backend continue d'exposer l'ancien nom en
+   alias pendant 2 releases Desktop.
+2. **Desktop v(n)** : ajoute le nouveau nom, marque l'ancien
+   `@deprecated` dans la doc command.
+3. **Desktop v(n+1)** : retire l'ancien nom, aligne sur le nouveau.
 4. **Backend v(suivant)** : peut retirer l'alias.
 
-Sinon : les users qui n'ont pas fait `tendergraph update` cassent.
+Sinon : les utilisateurs qui n'ont pas fait `tendergraph update` cassent.
 
 ## Responsabilités
 
 | Rôle | Responsabilité |
 |---|---|
-| PR author backend | S'assure que `tools/check-tg-alignment` pourrait passer côté Studio |
-| PR author studio | Vérifie que `bun run align` passe avant merge |
-| Agent `tg-studio-aligner` (backend) | PROACTIVELY ouvre un PR Studio si une modif backend casserait l'alignement |
-| Agent `tg-mcp-aligner` (backend) | Vérifie parité MCP↔SaaS (existant, PR #78) |
+| PR author backend | S'assure que `check-tg-alignment` pourrait passer côté Desktop |
+| PR author Desktop | Vérifie que `bun run align` passe avant merge |
+| Agent `tg-studio-aligner` (backend) | PROACTIVELY ouvre un PR Desktop si une modif backend casserait l'alignement |
+| Agent `tg-mcp-aligner` (backend) | Vérifie parité MCP↔serveur interne |
 | CI backend | Bloque merge si `test_mcp_parity` fail |
-| CI studio | Bloque merge si `check-tg-alignment` fail |
+| CI Desktop | Bloque merge si `check-tg-alignment` fail |
