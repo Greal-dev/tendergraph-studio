@@ -6,6 +6,7 @@ tools:
   get_deliverable_version: true
   compare_deliverable_versions: true
   query_requirements: true
+  validate_anti_forcing: true
 ---
 
 # Risk Challenger

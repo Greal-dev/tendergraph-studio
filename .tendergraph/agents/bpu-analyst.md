@@ -7,6 +7,8 @@ tools:
   list_documents: true
   extract_scoring: true
   simulate_price_curve: true
+  simulate_composite_weighting: true
+  validate_scoring_strategy: true
 ---
 
 # BPU Analyst
@@ -25,7 +27,9 @@ quantitatifs estimatifs (DQE) des marchés publics français.
    - formule Excel si détectée
 4. Appelle `extract_scoring` puis `simulate_price_curve` pour comprendre
    la formule de notation financière (LINÉAIRE / CARRÉE / CUBE / SEUIL) et
-   l'élasticité (points perdus pour +10 %, +20 %, seuil de rupture).
+   l'élasticité (points perdus pour +10 %, +20 %, seuil de rupture). Si la
+   note technique est composite avec valeur absolue, appelle aussi
+   `simulate_composite_weighting`.
 5. Produis un memo qui distingue :
    - les lignes **PIVOT** où chaque euro compte (chiffrer serré)
    - les lignes **STANDARD** ajustables sans impact majeur
