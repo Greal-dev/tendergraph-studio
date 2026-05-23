@@ -1,18 +1,20 @@
 ---
-name: revue
-description: Revue qualité + verdict go/no-go
-phase_backend: revue
+name: revue-evaluateur
+description: Revue côté évaluateur (simulation grille de notation, verdict go/no-go)
+phase_backend: revue_evaluateur
 ---
 
-# Phase 9 — revue
+# Phase — revue_evaluateur
 
-Produit 4-revues/verdict.md. Invoque risk-challenger pour stress-test.
+Revue côté évaluateur : simule la notation selon la grille extraite (scoring_strategy),
+challenge la proposition de valeur, verdict go/no-go. Peut invoquer `risk-challenger`
+pour stress-test.
 
 ## Protocole
 
 1. Vérifie la phase courante via `tendergraph_step(action="status")`.
-2. Si la phase courante n'est pas `revue`, avertis l'user :
-   *"Le pipeline est actuellement en phase X, cette commande s'applique à revue.
+2. Si la phase courante n'est pas `revue_evaluateur`, avertis l'user :
+   *"Le pipeline est actuellement en phase X, cette commande s'applique à revue_evaluateur.
    Voulez-vous forcer un saut ? (non recommandé)"*.
 3. Sinon, appelle `tendergraph_step(action="continue")` pour récupérer les
    instructions + contexte + livrables attendus + validators.

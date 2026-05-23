@@ -1,18 +1,20 @@
 ---
-name: solutionning
-description: Stratégie de solutionning (scoring, BPU, formules, scénarios)
-phase_backend: solutionning
+name: revue-coherence
+description: Revue de cohérence interne du dossier (alignement exigences ↔ livrables)
+phase_backend: revue_coherence
 ---
 
-# Phase 4 — solutionning
+# Phase — revue_coherence
 
-Invoque bpu-analyst en amont. Produit 03-solutionning-strategy.md conforme aux 5 règles dures.
+Revue de cohérence : alignement entre exigences DCE, stratégie, solution, briefs,
+livrables produits. Détecte décalages, doublons, manques. Première des deux passes
+de revue, avant `revue_evaluateur`.
 
 ## Protocole
 
 1. Vérifie la phase courante via `tendergraph_step(action="status")`.
-2. Si la phase courante n'est pas `solutionning`, avertis l'user :
-   *"Le pipeline est actuellement en phase X, cette commande s'applique à solutionning.
+2. Si la phase courante n'est pas `revue_coherence`, avertis l'user :
+   *"Le pipeline est actuellement en phase X, cette commande s'applique à revue_coherence.
    Voulez-vous forcer un saut ? (non recommandé)"*.
 3. Sinon, appelle `tendergraph_step(action="continue")` pour récupérer les
    instructions + contexte + livrables attendus + validators.
