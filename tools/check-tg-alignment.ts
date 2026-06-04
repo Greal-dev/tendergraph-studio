@@ -23,6 +23,7 @@ const REPO_ROOT = process.cwd();
 
 type Catalog = {
   phases: string[];
+  phases_devis?: string[];
   tools_public: { name: string; description: string }[];
   validators: string[];
   resources: string[];
@@ -55,7 +56,7 @@ function readOverlay() {
       const content = readFileSync(join(commandsDir, f), "utf8");
       const name = basename(f, ".md");
       const phaseMatch = content.match(/^phase_backend:\s*(\S+)/m);
-      const toolRegex = /tendergraph_step|tendergraph_kickoff|tendergraph_map_existing|tendergraph_submit_rex|tendergraph_cross_plan_scoring|get_workspace_tree|read_document|write_deliverable|edit_section|list_documents|search_in_document|query_requirements|get_requirements_summary|extract_imposed_plan|validate_plan|extract_scoring|simulate_price_curve|simulate_composite_weighting|analyze_bpu_dqe|analyze_form|advance_phase|validate_anti_forcing|validate_scoring_strategy|validate_briefs_coverage|validate_transition_artefact|list_my_projects|accept_project_invitation|create_project|find_project_by_query|acquire_lock|release_lock|wait_for_lock|list_active_locks|list_deliverable_versions|get_deliverable_version|compare_deliverable_versions|imitation_gap_report|get_user_guide|produce_phase_book_cv|produce_phase_production_mt|produce_phase_production_other|produce_phase_revue_coherence|produce_phase_revue_evaluateur|produce_phase_solution_design|propose_edit|propose_supports|resolve_pending_edit|list_pending_edits|start_requirement_mining|enter_copilot_mode|final_review_aggregate|final_review_corpus|final_review_p1|final_review_p2|final_review_prompt|recommend_models|upload_dce_file|download_file|generate_excel_capacity_plan|generate_excel_financial_model|generate_html_archmap|generate_html_dashboard|generate_html_deck|generate_pptx_from_brief|list_workspace_contents|list_sampling_phases_available|export_support_to_pdf|tendergraph_docx_add_comment|tendergraph_docx_list_comments|tendergraph_docx_resolve_comment|tendergraph_docx_delete_comment/g;
+      const toolRegex = /tendergraph_step|tendergraph_kickoff|tendergraph_map_existing|tendergraph_submit_rex|tendergraph_cross_plan_scoring|get_workspace_tree|read_document|write_deliverable|edit_section|list_documents|search_in_document|query_requirements|get_requirements_summary|extract_imposed_plan|validate_plan|extract_scoring|simulate_price_curve|simulate_composite_weighting|analyze_bpu_dqe|analyze_form|advance_phase|validate_anti_forcing|validate_scoring_strategy|validate_briefs_coverage|validate_transition_artefact|list_my_projects|my_subscription|accept_project_invitation|create_project|find_project_by_query|acquire_lock|release_lock|wait_for_lock|list_active_locks|list_deliverable_versions|get_deliverable_version|compare_deliverable_versions|imitation_gap_report|get_user_guide|produce_phase_book_cv|produce_phase_production_mt|produce_phase_production_other|produce_phase_revue_coherence|produce_phase_revue_evaluateur|produce_phase_solution_design|propose_edit|propose_supports|resolve_pending_edit|list_pending_edits|start_requirement_mining|enter_copilot_mode|final_review_aggregate|final_review_corpus|final_review_p1|final_review_p2|final_review_prompt|recommend_models|upload_dce_file|download_file|generate_excel_capacity_plan|generate_excel_financial_model|generate_html_archmap|generate_html_dashboard|generate_html_deck|generate_pptx_from_brief|list_workspace_contents|list_sampling_phases_available|export_support_to_pdf|tendergraph_docx_add_comment|tendergraph_docx_list_comments|tendergraph_docx_resolve_comment|tendergraph_docx_delete_comment/g;
       const tools_used = Array.from(new Set(content.match(toolRegex) ?? []));
       commands.push({
         file: f, name,
@@ -116,6 +117,10 @@ type Divergence = {
 function check(catalog: Catalog, overlay: ReturnType<typeof readOverlay>): Divergence[] {
   const out: Divergence[] = [];
 
+  // Phases backend = pipeline AO (phases) + pipeline Besoin->Devis (phases_devis,
+  // champ additif optionnel). Les deux exigent une slash command par phase.
+  const backendPhases = [...catalog.phases, ...(catalog.phases_devis ?? [])];
+
   // 1. Chaque phase backend doit avoir une commande studio
   const phaseToCommand = new Map<string, string>();
   for (const c of overlay.commands) {
@@ -126,7 +131,7 @@ function check(catalog: Catalog, overlay: ReturnType<typeof readOverlay>): Diver
       // alias résolu, rien à faire
     }
   }
-  for (const phase of catalog.phases) {
+  for (const phase of backendPhases) {
     if (!phaseToCommand.has(phase)) {
       out.push({
         level: "error",
@@ -138,11 +143,11 @@ function check(catalog: Catalog, overlay: ReturnType<typeof readOverlay>): Diver
 
   // 2. Aucune commande avec phase_backend inconnue
   for (const c of overlay.commands) {
-    if (c.phase_backend && !catalog.phases.includes(c.phase_backend)) {
+    if (c.phase_backend && !backendPhases.includes(c.phase_backend)) {
       out.push({
         level: "error",
         message: `Slash command '${c.name}' référence phase_backend='${c.phase_backend}' qui n'existe pas côté backend.`,
-        fix: `Retirer ${c.file} ou mettre à jour phase_backend sur une phase valide : ${catalog.phases.join(", ")}.`,
+        fix: `Retirer ${c.file} ou mettre à jour phase_backend sur une phase valide : ${backendPhases.join(", ")}.`,
       });
     }
   }

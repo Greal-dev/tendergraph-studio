@@ -119,7 +119,9 @@
                 "diagnostic-collecte", "revue-coherence", "revue-evaluateur",
                 "materialisation-revision",
                 "compare", "status", "resume",
-                "titan-onboarding", "new-project"],
+                "titan-onboarding", "new-project", "subscription",
+                "comprehension-besoin", "ancrage-besoin", "strategie-solution",
+                "chiffrage-structure", "redaction-devis", "revue-materialisation"],
     "aliases": {
       "solutionning": "solution-design",
       "solution": "solution-design",
