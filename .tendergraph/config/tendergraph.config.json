@@ -11,7 +11,7 @@
         "refreshHeaderFromKeychain": "tendergraph.mcp.refresh_token",
         "refreshEndpoint": "https://tendergraph-v3.fly.dev/api/mcp/token/refresh",
         "tokenTTLHours": 1,
-        "description": "Serveur MCP TenderGraph — pipeline 13 phases, workspace, validators, versioning."
+        "description": "Serveur MCP TenderGraph — pipelines AO (13 phases) + Besoin→Devis (allégé), choix du mode à l'init, workspace, validators, versioning."
       }
     }
   },
@@ -118,7 +118,8 @@
                 "briefs", "production", "book-cv",
                 "diagnostic-collecte", "revue-coherence", "revue-evaluateur",
                 "materialisation-revision",
-                "compare", "status", "resume"],
+                "compare", "status", "resume",
+                "titan-onboarding", "new-project"],
     "aliases": {
       "solutionning": "solution-design",
       "solution": "solution-design",
