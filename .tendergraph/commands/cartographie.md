@@ -14,7 +14,12 @@ Produit 00-dossier-map.md avec priorité P0/P1/P2/P3 et graphe de dépendances
 2. Si la phase courante n'est pas `cartographie`, avertis l'user :
    *"Le pipeline est actuellement en phase X, cette commande s'applique à cartographie.
    Voulez-vous forcer un saut ? (non recommandé)"*.
-3. Sinon, appelle `tendergraph_step(action="continue")` pour récupérer les
+3. Dès que l'identité du marché est connue (acheteur, référence/numéro de consultation,
+   objet, montant, lots), appelle `tendergraph_register_dossier(project_id, acheteur,
+   reference, objet, montant, lots)` — **1 projet = 1 marché**. Si la réponse vaut
+   `different_market`, relaie l'avertissement à l'user (proposer de créer un projet dédié) ;
+   deux lots d'un même marché ne déclenchent pas d'alerte.
+4. Sinon, appelle `tendergraph_step(action="continue")` pour récupérer les
    instructions + contexte + livrables attendus + validators.
 4. Produis le(s) livrable(s) selon les instructions fournies par le serveur.
 5. Pour chaque livrable, `tendergraph_step(action="submit", deliverable_path=..., content=...)`.
